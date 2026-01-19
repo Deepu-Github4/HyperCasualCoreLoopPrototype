@@ -1,29 +1,50 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class PoolManager : MonoBehaviour
 {
-    [Header("Pool Settings")]
-    [SerializeField] private GameObject obstaclePrefab;
-    [SerializeField] private int poolSize = 20;
+    [SerializeField] private GameObject prefab;
+    [SerializeField] private int poolSize = 15;
 
-    private Queue<GameObject> pool = new Queue<GameObject>();
+    private Queue<GameObject> available = new Queue<GameObject>();
+    private List<GameObject> active = new List<GameObject>();
 
     void Awake()
     {
         for (int i = 0; i < poolSize; i++)
         {
-            GameObject obj = Instantiate(obstaclePrefab);
+            GameObject obj = Instantiate(prefab, transform);
             obj.SetActive(false);
-            pool.Enqueue(obj);
+            available.Enqueue(obj);
         }
     }
 
     public GameObject Get()
     {
-        GameObject obj = pool.Dequeue();
+        if (available.Count == 0)
+        {
+            Debug.LogWarning("Obstacle pool exhausted!");
+            return null;
+        }
+
+        GameObject obj = available.Dequeue();
         obj.SetActive(true);
-        pool.Enqueue(obj);
+        active.Add(obj);
         return obj;
+    }
+
+    public void Return(GameObject obj)
+    {
+        if (!active.Contains(obj))
+            return;
+
+        obj.SetActive(false);
+        active.Remove(obj);
+        available.Enqueue(obj);
+    }
+
+    public List<GameObject> GetActiveObjects()
+    {
+        return active;
     }
 }
